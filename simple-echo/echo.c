@@ -158,14 +158,14 @@ run(LV2_Handle instance, uint32_t n_samples)
 		float input_sample = input[pos];
 		int read_head = echo->write_head - delay_in_sample;
 		if (read_head < 0) {
-			read_head += 44100;
+			read_head += 44101;
 		}
 		delay_buffer[echo->write_head] = input_sample;
-		echo->write_head++;
-		if (echo->write_head >= 44100) {
-			echo->write_head -= 44100;
-		}
 		float delay_sample = delay_buffer[read_head];
+		echo->write_head++;
+		if (echo->write_head >= 44101) {
+			echo->write_head -= 44101;
+		}
 		output[pos] = input_sample + delay_sample;
 	}
 }
