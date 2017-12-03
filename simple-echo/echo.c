@@ -42,7 +42,7 @@
    should be defined for readability.
 */
 typedef enum {
-	ECHO_GAIN   = 0,
+	ECHO_DELAY   = 0,
 	ECHO_INPUT  = 1,
 	ECHO_OUTPUT = 2
 } PortIndex;
@@ -55,7 +55,7 @@ typedef enum {
 */
 typedef struct {
 	// Port buffers
-	const float* gain;
+	const float* delay;
 	const float* input;
 	float*       output;
 } Echo;
@@ -97,8 +97,8 @@ connect_port(LV2_Handle instance,
 	Echo* echo = (Echo*)instance;
 
 	switch ((PortIndex)port) {
-	case ECHO_GAIN:
-		echo->gain = (const float*)data;
+	case ECHO_DELAY:
+		echo->delay = (const float*)data;
 		break;
 	case ECHO_INPUT:
 		echo->input = (const float*)data;
@@ -124,7 +124,7 @@ activate(LV2_Handle instance)
 }
 
 /** Define a macro for converting a gain in dB to a coefficient. */
-#define DB_COgc ((g) > -90.0f ? powf(10.0f, (g) * 0.05f) : 0.0f)
+#define DB_CO(g) ((g) > -90.0f ? powf(10.0f, (g) * 0.05f) : 0.0f)
 
 /**
    The `run()` method is the main process function of the plugin.  It processes
@@ -137,11 +137,11 @@ run(LV2_Handle instance, uint32_t n_samples)
 {
 	const Echo* echo = (const Echo*)instance;
 
-	const float        gain   = *(echo->gain);
+	const float        delay   = *(echo->delay);
 	const float* const input  = echo->input;
 	float* const       output = echo->output;
 
-	const float coef = DB_CO(gain);
+	const float coef = DB_CO(delay);
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		output[pos] = input[pos] * coef;
