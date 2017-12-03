@@ -58,6 +58,9 @@ typedef struct {
 	const float* delay;
 	const float* input;
 	float*       output;
+    float delay_buffer[44100]; // 1 sec at 44100hz
+	unsigned int write_head;
+	unsigned int read_head;
 } Echo;
 
 /**
@@ -135,16 +138,29 @@ activate(LV2_Handle instance)
 static void
 run(LV2_Handle instance, uint32_t n_samples)
 {
-	const Echo* echo = (const Echo*)instance;
+	//const Echo* echo = (const Echo*)instance;
+	Echo* echo = (Echo*)instance;
 
 	const float        delay   = *(echo->delay);
 	const float* const input  = echo->input;
 	float* const       output = echo->output;
+	float * const delay_buffer = echo->delay_buffer;
 
-	const float coef = DB_CO(delay);
+	const unsigned int delay_in_sample = (unsigned int)(delay * 44100.0f);
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
-		output[pos] = input[pos] * coef;
+		float input_sample = input[pos];
+		delay_buffer[echo->write_head] = input_sample;
+		echo->read_head = echo->write_head + delay_in_sample;
+		if (echo->read_head >= 44100) {
+			echo->read_head -= 44100;
+		}
+		echo->write_head++;
+		if (echo->write_head >= 44100) {
+			echo->write_head -= 44100;
+		}
+		float delay_sample = delay_buffer[echo->read_head];
+		output[pos] = input_sample + delay_sample;
 	}
 }
 
