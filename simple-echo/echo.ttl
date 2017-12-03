@@ -26,14 +26,8 @@
 # Translations to various languages can be added by putting a language tag
 # after strings as shown.
 	doap:name "Simple echo" ,
-		"简单放大器"@zh ,
-		"Einfaches Echo"@de ,
 		"Simple Echo"@en-gb ,
-		"Eco Simple"@es ,
-		"Echo Simple"@fr ,
-		"Eco Semplice"@it ,
-		"簡単なアンプ"@jp ,
-		"Просто Усилитель"@ru ;
+		"Écho Simple"@fr ;
 	doap:license <http://opensource.org/licenses/isc> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:port [
@@ -43,38 +37,19 @@
 		a lv2:InputPort ,
 			lv2:ControlPort ;
 		lv2:index 0 ;
-		lv2:symbol "gain" ;
-		lv2:name "Gain" ,
-			"收益"@zh ,
-			"Verstärkung"@de ,
-			"Gain"@en-gb ,
-			"Aumento"@es ,
-			"Gain"@fr ,
-			"Guadagno"@it ,
-			"利益"@jp ,
-			"Увеличение"@ru ;
+		lv2:symbol "time" ;
+		lv2:name "Time (sec)" ,
+			"Time (sec)"@en-gb ,
+			"Temps (sec)"@fr ;
 # An lv2:ControlPort should always describe its default value, and usually a
 # minimum and maximum value.  Defining a range is not strictly required, but
 # should be done wherever possible to aid host support, particularly for UIs.
 		lv2:default 0.0 ;
-		lv2:minimum -90.0 ;
-		lv2:maximum 24.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
 # Ports can describe units and control detents to allow better UI generation
 # and host automation.
-		units:unit units:db ;
-		lv2:scalePoint [
-			rdfs:label "+5" ;
-			rdf:value 5.0
-		] , [
-			rdfs:label "0" ;
-			rdf:value 0.0
-		] , [
-			rdfs:label "-5" ;
-			rdf:value -5.0
-		] , [
-			rdfs:label "-10" ;
-			rdf:value -10.0
-		]
+		units:unit units:sec ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
