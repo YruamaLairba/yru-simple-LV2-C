@@ -53,12 +53,18 @@ typedef enum {
    every instance method.  In this simple plugin, only port buffers need to be
    stored, since there is no additional instance data.
 */
+//const unsigned int max_delay_in_sample = 44100;
+//const unsigned int delay_buffer_size = max_delay_in_sample + 1;
+#define MAX_DELAY_IN_SAMPLE 44100  // 1 sec at 44100hz
+#define DELAY_BUFFER_SIZE (MAX_DELAY_IN_SAMPLE + 1)
+
+
 typedef struct {
 	// Port buffers
 	const float* delay;
 	const float* input;
 	float*       output;
-    float delay_buffer[44100]; // 1 sec at 44100hz
+    float delay_buffer[DELAY_BUFFER_SIZE];
 	unsigned int write_head;
 	unsigned int read_head;
 } Echo;
@@ -150,16 +156,16 @@ run(LV2_Handle instance, uint32_t n_samples)
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
-		delay_buffer[echo->write_head] = input_sample;
-		echo->read_head = echo->write_head + delay_in_sample;
-		if (echo->read_head >= 44100) {
-			echo->read_head -= 44100;
+		int read_head = echo->write_head - delay_in_sample;
+		if (read_head < 0) {
+			read_head += 44100;
 		}
+		delay_buffer[echo->write_head] = input_sample;
 		echo->write_head++;
 		if (echo->write_head >= 44100) {
 			echo->write_head -= 44100;
 		}
-		float delay_sample = delay_buffer[echo->read_head];
+		float delay_sample = delay_buffer[read_head];
 		output[pos] = input_sample + delay_sample;
 	}
 }
