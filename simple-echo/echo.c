@@ -167,7 +167,8 @@ run(LV2_Handle instance, uint32_t n_samples)
 	unsigned int delay_buffer_size = echo->delay_buffer_size;
 	double rate = echo->rate;
 
-	const unsigned int delay_in_sample = (unsigned int)(delay * rate);
+	const unsigned int delay_in_sample =
+		(unsigned int)((delay * rate > 1)?(delay * rate):1);
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
@@ -175,13 +176,14 @@ run(LV2_Handle instance, uint32_t n_samples)
 		if (read_head < 0) {
 			read_head += delay_buffer_size;
 		}
-		delay_buffer[echo->write_head] = input_sample;
 		float delay_sample = delay_buffer[read_head];
+		float output_sample = input_sample + (feedback * delay_sample);
+		delay_buffer[echo->write_head] = output_sample;
 		echo->write_head++;
 		if (echo->write_head >= delay_buffer_size) {
 			echo->write_head -= delay_buffer_size;
 		}
-		output[pos] = input_sample + delay_sample;
+		output[pos] = output_sample;
 	}
 }
 
