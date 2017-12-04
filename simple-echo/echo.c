@@ -55,6 +55,7 @@ typedef enum {
 */
 //const unsigned int max_delay_in_sample = 44100;
 //const unsigned int delay_buffer_size = max_delay_in_sample + 1;
+#define MAX_DELAY_IN_SEC 1
 #define MAX_DELAY_IN_SAMPLE 44100  // 1 sec at 44100hz
 #define DELAY_BUFFER_SIZE (MAX_DELAY_IN_SAMPLE + 1)
 
@@ -64,9 +65,12 @@ typedef struct {
 	const float* delay;
 	const float* input;
 	float*       output;
-    float delay_buffer[DELAY_BUFFER_SIZE];
-	unsigned int write_head;
+    //float delay_buffer[DELAY_BUFFER_SIZE];
+	float* delay_buffer;
+    unsigned int delay_buffer_size;
+    unsigned int write_head;
 	unsigned int read_head;
+	double rate;
 } Echo;
 
 /**
@@ -86,6 +90,10 @@ instantiate(const LV2_Descriptor*     descriptor,
             const LV2_Feature* const* features)
 {
 	Echo* echo = (Echo*)calloc(1, sizeof(Echo));
+	echo->rate = rate;
+	echo->delay_buffer_size = rate * MAX_DELAY_IN_SEC + 1;
+	echo->delay_buffer = (float*)calloc(echo->delay_buffer_size,
+	                                    sizeof(float));
 
 	return (LV2_Handle)echo;
 }
@@ -151,20 +159,22 @@ run(LV2_Handle instance, uint32_t n_samples)
 	const float* const input  = echo->input;
 	float* const       output = echo->output;
 	float * const delay_buffer = echo->delay_buffer;
+	unsigned int delay_buffer_size = echo->delay_buffer_size;
+	double rate = echo->rate;
 
-	const unsigned int delay_in_sample = (unsigned int)(delay * 44100.0f);
+	const unsigned int delay_in_sample = (unsigned int)(delay * rate);
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
 		int read_head = echo->write_head - delay_in_sample;
 		if (read_head < 0) {
-			read_head += 44101;
+			read_head += delay_buffer_size;
 		}
 		delay_buffer[echo->write_head] = input_sample;
 		float delay_sample = delay_buffer[read_head];
 		echo->write_head++;
-		if (echo->write_head >= 44101) {
-			echo->write_head -= 44101;
+		if (echo->write_head >= delay_buffer_size) {
+			echo->write_head -= delay_buffer_size;
 		}
 		output[pos] = input_sample + delay_sample;
 	}
@@ -195,6 +205,9 @@ deactivate(LV2_Handle instance)
 static void
 cleanup(LV2_Handle instance)
 {
+	Echo* echo = (Echo*)instance;
+	echo->delay_buffer_size = 0;
+	free(echo->delay_buffer);
 	free(instance);
 }
 
