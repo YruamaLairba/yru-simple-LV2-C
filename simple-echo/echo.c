@@ -43,8 +43,9 @@
 */
 typedef enum {
 	ECHO_DELAY   = 0,
-	ECHO_INPUT  = 1,
-	ECHO_OUTPUT = 2
+	ECHO_FEEDBACK = 1,
+	ECHO_INPUT  = 2,
+	ECHO_OUTPUT = 3
 } PortIndex;
 
 /**
@@ -63,6 +64,7 @@ typedef enum {
 typedef struct {
 	// Port buffers
 	const float* delay;
+	const float* feedback;
 	const float* input;
 	float*       output;
     //float delay_buffer[DELAY_BUFFER_SIZE];
@@ -117,6 +119,8 @@ connect_port(LV2_Handle instance,
 	case ECHO_DELAY:
 		echo->delay = (const float*)data;
 		break;
+	case ECHO_FEEDBACK:
+		echo->feedback = (const float*)data;
 	case ECHO_INPUT:
 		echo->input = (const float*)data;
 		break;
@@ -156,6 +160,7 @@ run(LV2_Handle instance, uint32_t n_samples)
 	Echo* echo = (Echo*)instance;
 
 	const float        delay   = *(echo->delay);
+	const float        feedback = *(echo->feedback);
 	const float* const input  = echo->input;
 	float* const       output = echo->output;
 	float * const delay_buffer = echo->delay_buffer;
