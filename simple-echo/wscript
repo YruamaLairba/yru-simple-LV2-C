@@ -3,7 +3,7 @@ from waflib.extras import autowaf as autowaf
 import re
 
 # Variables for 'waf dist'
-APPNAME = 'eg-echo.lv2'
+APPNAME = 'simple-echo.lv2'
 VERSION = '1.0.0'
 
 # Mandatory variables
@@ -31,7 +31,7 @@ def configure(conf):
     print('')
 
 def build(bld):
-    bundle = 'eg-echo.lv2'
+    bundle = 'simple-echo.lv2'
 
     # Make a pattern for shared objects without the 'lib' prefix
     module_pat = re.sub('^lib', '', bld.env.cshlib_PATTERN)
@@ -44,7 +44,7 @@ def build(bld):
         install_path = '${LV2DIR}/%s' % bundle,
         LIB_EXT      = module_ext)
 
-    # Copy other data files to build bundle (build/eg-echo.lv2)
+    # Copy other data files to build bundle (build/simple-echo.lv2)
     for i in ['echo.ttl']:
         bld(features     = 'subst',
             is_copy      = True,
