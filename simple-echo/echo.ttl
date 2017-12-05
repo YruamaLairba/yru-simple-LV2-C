@@ -7,7 +7,7 @@
 
 <http://lv2plug.in/plugins/simple-echo>
 	a lv2:Plugin ,
-		lv2:EchoPlugin ;
+		lv2:DelayPlugin ;
 # Project
 	lv2:project <http://lv2plug.in/ns/lv2> ;
 	doap:name "Simple echo" ,
