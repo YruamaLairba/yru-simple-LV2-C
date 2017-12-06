@@ -54,8 +54,8 @@ typedef enum {
    every instance method.  In this simple plugin, only port buffers need to be
    stored, since there is no additional instance data.
 */
-//const unsigned int max_delay_in_sample = 44100;
-//const unsigned int delay_buffer_size = max_delay_in_sample + 1;
+//const unsigned int max_rate_in_sample = 44100;
+//const unsigned int rate_buffer_size = max_rate_in_sample + 1;
 #define MAX_DELAY_IN_SEC 1
 #define MAX_DELAY_IN_SAMPLE 44100  // 1 sec at 44100hz
 #define DELAY_BUFFER_SIZE (MAX_DELAY_IN_SAMPLE + 1)
@@ -63,21 +63,21 @@ typedef enum {
 
 typedef struct {
 	// Port buffers
-	const float* delay;
+	const float* rate;
 	const float* feedback;
 	const float* input;
 	float*       output;
-    //float delay_buffer[DELAY_BUFFER_SIZE];
-	float* delay_buffer;
-    unsigned int delay_buffer_size;
+    //float rate_buffer[DELAY_BUFFER_SIZE];
+	float* rate_buffer;
+    unsigned int rate_buffer_size;
     unsigned int write_head;
 	unsigned int read_head;
-	double rate;
+	double sample_rate;
 } Tremolo;
 
 /**
    The `instantiate()` function is called by the host to create a new plugin
-   instance.  The host passes the plugin descriptor, sample rate, and bundle
+   instance.  The host passes the plugin descriptor, sample_rate, and bundle
    path for plugins that need to load additional resources (e.g. waveforms).
    The features parameter contains host-provided features defined in LV2
    extensions, but this simple plugin does not use any.
@@ -87,14 +87,14 @@ typedef struct {
 */
 static LV2_Handle
 instantiate(const LV2_Descriptor*     descriptor,
-            double                    rate,
+            double                    sample_rate,
             const char*               bundle_path,
             const LV2_Feature* const* features)
 {
 	Tremolo* tremolo = (Tremolo*)calloc(1, sizeof(Tremolo));
-	tremolo->rate = rate;
-	tremolo->delay_buffer_size = rate * MAX_DELAY_IN_SEC + 1;
-	tremolo->delay_buffer = (float*)calloc(tremolo->delay_buffer_size,
+	tremolo->sample_rate = sample_rate;
+	tremolo->rate_buffer_size = sample_rate * MAX_DELAY_IN_SEC + 1;
+	tremolo->rate_buffer = (float*)calloc(tremolo->rate_buffer_size,
 	                                    sizeof(float));
 
 	return (LV2_Handle)tremolo;
@@ -117,7 +117,7 @@ connect_port(LV2_Handle instance,
 
 	switch ((PortIndex)port) {
 	case TREMOLO_DELAY:
-		tremolo->delay = (const float*)data;
+		tremolo->rate = (const float*)data;
 		break;
 	case TREMOLO_FEEDBACK:
 		tremolo->feedback = (const float*)data;
@@ -159,29 +159,29 @@ run(LV2_Handle instance, uint32_t n_samples)
 	//const Tremolo* tremolo = (const Tremolo*)instance;
 	Tremolo* tremolo = (Tremolo*)instance;
 
-	const float        delay   = *(tremolo->delay);
+	const float        rate   = *(tremolo->rate);
 	const float        feedback = *(tremolo->feedback);
 	const float* const input  = tremolo->input;
 	float* const       output = tremolo->output;
-	float * const delay_buffer = tremolo->delay_buffer;
-	unsigned int delay_buffer_size = tremolo->delay_buffer_size;
-	double rate = tremolo->rate;
+	float * const rate_buffer = tremolo->rate_buffer;
+	unsigned int rate_buffer_size = tremolo->rate_buffer_size;
+	double sample_rate = tremolo->sample_rate;
 
-	const unsigned int delay_in_sample =
-		(unsigned int)((delay * rate > 1)?(delay * rate):1);
+	const unsigned int rate_in_sample =
+		(unsigned int)((rate * sample_rate > 1)?(rate * sample_rate):1);
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
-		int read_head = tremolo->write_head - delay_in_sample;
+		int read_head = tremolo->write_head - rate_in_sample;
 		if (read_head < 0) {
-			read_head += delay_buffer_size;
+			read_head += rate_buffer_size;
 		}
-		float delay_sample = delay_buffer[read_head];
-		float output_sample = input_sample + (feedback * delay_sample);
-		delay_buffer[tremolo->write_head] = output_sample;
+		float rate_sample = rate_buffer[read_head];
+		float output_sample = input_sample + (feedback * rate_sample);
+		rate_buffer[tremolo->write_head] = output_sample;
 		tremolo->write_head++;
-		if (tremolo->write_head >= delay_buffer_size) {
-			tremolo->write_head -= delay_buffer_size;
+		if (tremolo->write_head >= rate_buffer_size) {
+			tremolo->write_head -= rate_buffer_size;
 		}
 		output[pos] = output_sample;
 	}
@@ -213,8 +213,8 @@ static void
 cleanup(LV2_Handle instance)
 {
 	Tremolo* tremolo = (Tremolo*)instance;
-	tremolo->delay_buffer_size = 0;
-	free(tremolo->delay_buffer);
+	tremolo->rate_buffer_size = 0;
+	free(tremolo->rate_buffer);
 	free(instance);
 }
 
