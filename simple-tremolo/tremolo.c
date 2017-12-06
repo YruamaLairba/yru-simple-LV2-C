@@ -43,7 +43,7 @@
 */
 typedef enum {
 	TREMOLO_DELAY   = 0,
-	TREMOLO_FEEDBACK = 1,
+	TREMOLO_DEPTH = 1,
 	TREMOLO_INPUT  = 2,
 	TREMOLO_OUTPUT = 3
 } PortIndex;
@@ -64,7 +64,7 @@ typedef enum {
 typedef struct {
 	// Port buffers
 	const float* rate;
-	const float* feedback;
+	const float* depth;
 	const float* input;
 	float*       output;
     //float rate_buffer[DELAY_BUFFER_SIZE];
@@ -119,8 +119,8 @@ connect_port(LV2_Handle instance,
 	case TREMOLO_DELAY:
 		tremolo->rate = (const float*)data;
 		break;
-	case TREMOLO_FEEDBACK:
-		tremolo->feedback = (const float*)data;
+	case TREMOLO_DEPTH:
+		tremolo->depth = (const float*)data;
 	case TREMOLO_INPUT:
 		tremolo->input = (const float*)data;
 		break;
@@ -160,7 +160,7 @@ run(LV2_Handle instance, uint32_t n_samples)
 	Tremolo* tremolo = (Tremolo*)instance;
 
 	const float        rate   = *(tremolo->rate);
-	const float        feedback = *(tremolo->feedback);
+	const float        depth = *(tremolo->depth);
 	const float* const input  = tremolo->input;
 	float* const       output = tremolo->output;
 	float * const rate_buffer = tremolo->rate_buffer;
@@ -177,7 +177,7 @@ run(LV2_Handle instance, uint32_t n_samples)
 			read_head += rate_buffer_size;
 		}
 		float rate_sample = rate_buffer[read_head];
-		float output_sample = input_sample + (feedback * rate_sample);
+		float output_sample = input_sample + (depth * rate_sample);
 		rate_buffer[tremolo->write_head] = output_sample;
 		tremolo->write_head++;
 		if (tremolo->write_head >= rate_buffer_size) {
