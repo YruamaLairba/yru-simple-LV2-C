@@ -67,11 +67,8 @@ typedef struct {
 	const float* depth;
 	const float* input;
 	float*       output;
-    //float rate_buffer[DELAY_BUFFER_SIZE];
-	float* rate_buffer;
-    unsigned int rate_buffer_size;
-    unsigned int write_head;
-	unsigned int read_head;
+	// Internal values
+	float phase;
 	double sample_rate;
 } Tremolo;
 
@@ -92,10 +89,9 @@ instantiate(const LV2_Descriptor*     descriptor,
             const LV2_Feature* const* features)
 {
 	Tremolo* tremolo = (Tremolo*)calloc(1, sizeof(Tremolo));
+	tremolo->phase=0;
 	tremolo->sample_rate = sample_rate;
-	tremolo->rate_buffer_size = sample_rate * MAX_DELAY_IN_SEC + 1;
-	tremolo->rate_buffer = (float*)calloc(tremolo->rate_buffer_size,
-	                                    sizeof(float));
+
 
 	return (LV2_Handle)tremolo;
 }
@@ -147,6 +143,11 @@ activate(LV2_Handle instance)
 /** Define a macro for converting a gain in dB to a coefficient. */
 #define DB_CO(g) ((g) > -90.0f ? powf(10.0f, (g) * 0.05f) : 0.0f)
 
+/** PI constant */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif//M_PI
+
 /**
    The `run()` method is the main process function of the plugin.  It processes
    a block of audio in the audio context.  Since this plugin is
@@ -159,32 +160,23 @@ run(LV2_Handle instance, uint32_t n_samples)
 	//const Tremolo* tremolo = (const Tremolo*)instance;
 	Tremolo* tremolo = (Tremolo*)instance;
 
+	//Port
 	const float        rate   = *(tremolo->rate);
 	const float        depth = *(tremolo->depth);
 	const float* const input  = tremolo->input;
 	float* const       output = tremolo->output;
-	float * const rate_buffer = tremolo->rate_buffer;
-	unsigned int rate_buffer_size = tremolo->rate_buffer_size;
+	//internal value
+	float phase = tremolo->phase;
 	double sample_rate = tremolo->sample_rate;
-
-	const unsigned int rate_in_sample =
-		(unsigned int)((rate * sample_rate > 1)?(rate * sample_rate):1);
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
-		int read_head = tremolo->write_head - rate_in_sample;
-		if (read_head < 0) {
-			read_head += rate_buffer_size;
-		}
-		float rate_sample = rate_buffer[read_head];
-		float output_sample = input_sample + (depth * rate_sample);
-		rate_buffer[tremolo->write_head] = output_sample;
-		tremolo->write_head++;
-		if (tremolo->write_head >= rate_buffer_size) {
-			tremolo->write_head -= rate_buffer_size;
-		}
-		output[pos] = output_sample;
+		float modulant = 0.5f * ( 1.0f +
+			sinf(2.0f * (float)M_PI * phase /(float)sample_rate));
+		output[pos] = input_sample * modulant;
+		phase++;
 	}
+	tremolo->phase = phase;
 }
 
 /**
@@ -213,8 +205,6 @@ static void
 cleanup(LV2_Handle instance)
 {
 	Tremolo* tremolo = (Tremolo*)instance;
-	tremolo->rate_buffer_size = 0;
-	free(tremolo->rate_buffer);
 	free(instance);
 }
 
