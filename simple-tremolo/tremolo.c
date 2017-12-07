@@ -68,7 +68,7 @@ typedef struct {
 	const float* input;
 	float*       output;
 	// Internal values
-	float phase;
+	float progression;
 	double sample_rate;
 } Tremolo;
 
@@ -89,7 +89,7 @@ instantiate(const LV2_Descriptor*     descriptor,
             const LV2_Feature* const* features)
 {
 	Tremolo* tremolo = (Tremolo*)calloc(1, sizeof(Tremolo));
-	tremolo->phase=0;
+	tremolo->progression=0;
 	tremolo->sample_rate = sample_rate;
 
 
@@ -166,17 +166,22 @@ run(LV2_Handle instance, uint32_t n_samples)
 	const float* const input  = tremolo->input;
 	float* const       output = tremolo->output;
 	//internal value
-	float phase = tremolo->phase;
+	float progression = tremolo->progression;
 	double sample_rate = tremolo->sample_rate;
+
+	float delta = rate / (float)sample_rate;
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
-		float modulant = 0.5f * ( 1.0f +
-			sinf(2.0f * (float)M_PI * phase /(float)sample_rate));
+		float modulant = (1.0f-depth*0.5f) + depth*0.5f * (
+			sinf(2.0f * (float)M_PI * progression));
 		output[pos] = input_sample * modulant;
-		phase++;
+		progression += delta;
+		if (progression > 1.0f) {
+			progression += -1.0f;
+		}
 	}
-	tremolo->phase = phase;
+	tremolo->progression = progression;
 }
 
 /**
