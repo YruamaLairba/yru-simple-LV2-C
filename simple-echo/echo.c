@@ -67,10 +67,10 @@ typedef struct {
 	const float* feedback;
 	const float* input;
 	float*       output;
-    //float delay_buffer[DELAY_BUFFER_SIZE];
+	//float delay_buffer[DELAY_BUFFER_SIZE];
 	float* delay_buffer;
-    unsigned int delay_buffer_size;
-    unsigned int write_head;
+	unsigned int delay_buffer_size;
+	unsigned int write_head;
 	unsigned int read_head;
 	double rate;
 } Echo;
@@ -156,7 +156,6 @@ activate(LV2_Handle instance)
 static void
 run(LV2_Handle instance, uint32_t n_samples)
 {
-	//const Echo* echo = (const Echo*)instance;
 	Echo* echo = (Echo*)instance;
 
 	const float        delay   = *(echo->delay);
