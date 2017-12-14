@@ -35,7 +35,7 @@
    file is a good convention to follow.  If this URI does not match that used
    in the data files, the host will fail to load the plugin.
 */
-#define TREMOLO_URI "http://lv2plug.in/plugins/simple-tremolo"
+#define TREMOLO_URI "https://github.com/YruamaLairba/yru-simple-LV2-C#simple-tremolo"
 
 /**
    In code, ports are referred to by index.  An enumeration of port indices
