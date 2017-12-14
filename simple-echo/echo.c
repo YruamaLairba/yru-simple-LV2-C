@@ -35,7 +35,7 @@
    file is a good convention to follow.  If this URI does not match that used
    in the data files, the host will fail to load the plugin.
 */
-#define ECHO_URI "http://lv2plug.in/plugins/simple-echo"
+#define ECHO_URI "https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo"
 
 /**
    In code, ports are referred to by index.  An enumeration of port indices

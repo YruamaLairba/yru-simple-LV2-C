@@ -11,7 +11,7 @@
 #
 # LV2 makes use of URIs as globally-unique identifiers for resources.  For
 # example, the ID of the plugin described here is
-# `<http://lv2plug.in/plugins/simple-echo>`.  Note that URIs are only used as
+# `<https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo>`.  Note that URIs are only used as
 # identifiers and don't necessarily imply that something can be accessed at
 # that address on the web (though that may be the case).
 #
@@ -31,18 +31,18 @@
 # [options="header"]
 # |================================================================
 # | Subject                             | Predicate    | Object
-# | <http://lv2plug.in/plugins/simple-echo>  | a            | lv2:Plugin
-# | <http://lv2plug.in/plugins/simple-echo>  | lv2:binary   | <echo.so>
-# | <http://lv2plug.in/plugins/simple-echo>  | rdfs:seeAlso | <echo.ttl>
+# | <https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo>  | a            | lv2:Plugin
+# | <https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo>  | lv2:binary   | <echo.so>
+# | <https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo>  | rdfs:seeAlso | <echo.ttl>
 # |================================================================
 
-# Firstly, `<http://lv2plug.in/plugins/simple-echo>` is an LV2 plugin:
-<http://lv2plug.in/plugins/simple-echo> a lv2:Plugin .
+# Firstly, `<https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo>` is an LV2 plugin:
+<https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo> a lv2:Plugin .
 
 # The predicate ```a`'' is a Turtle shorthand for `rdf:type`.
 
 # The binary of that plugin can be found at `<echo.ext>`:
-<http://lv2plug.in/plugins/simple-echo> lv2:binary <echo@LIB_EXT@> .
+<https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo> lv2:binary <echo@LIB_EXT@> .
 
 # This file is a template; the token `@LIB_EXT@` is replaced by the build
 # system with the appropriate extension for the current platform before
@@ -52,17 +52,17 @@
 # directory as this manifest.
 
 # Finally, more information about this plugin can be found in `<echo.ttl>`:
-<http://lv2plug.in/plugins/simple-echo> rdfs:seeAlso <echo.ttl> .
+<https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo> rdfs:seeAlso <echo.ttl> .
 
 # ==== Abbreviation ====
 #
 # This file shows these statements individually for instructive purposes, but
-# the subject `<http://lv2plug.in/plugins/simple-echo>` is repetitive.  Turtle
+# the subject `<https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo>` is repetitive.  Turtle
 # allows the semicolon to be used as a delimiter that repeats the previous
 # subject.  For example, this manifest would more realistically be written like
 # so:
 
-<http://lv2plug.in/plugins/simple-echo>
+<https://github.com/YruamaLairba/yru-simple-LV2-C#simple-echo>
 	a lv2:Plugin ;
 	lv2:binary <echo@LIB_EXT@>  ;
 	rdfs:seeAlso <echo.ttl> .
