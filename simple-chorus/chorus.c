@@ -42,10 +42,11 @@
    should be defined for readability.
 */
 typedef enum {
-	CHORUS_DELAY   = 0,
-	CHORUS_FEEDBACK = 1,
-	CHORUS_INPUT  = 2,
-	CHORUS_OUTPUT = 3
+	CHORUS_RATE = 0,
+	CHORUS_DEPTH = 1,
+	CHORUS_MIX = 2,
+	CHORUS_INPUT  = 3,
+	CHORUS_OUTPUT = 4
 } PortIndex;
 
 /**
@@ -54,25 +55,22 @@ typedef enum {
    every instance method.  In this simple plugin, only port buffers need to be
    stored, since there is no additional instance data.
 */
-//const unsigned int max_delay_in_sample = 44100;
-//const unsigned int delay_buffer_size = max_delay_in_sample + 1;
-#define MAX_DELAY_IN_SEC 1
-#define MAX_DELAY_IN_SAMPLE 44100  // 1 sec at 44100hz
-#define DELAY_BUFFER_SIZE (MAX_DELAY_IN_SAMPLE + 1)
+#define MAX_DELAY_IN_MS 30
 
 
 typedef struct {
 	// Port buffers
-	const float* delay;
-	const float* feedback;
+	const float* rate;
+	const float* depth;
+	const float* mix;
 	const float* input;
 	float*       output;
-	//float delay_buffer[DELAY_BUFFER_SIZE];
+	// Internal data
 	float* delay_buffer;
 	unsigned int delay_buffer_size;
 	unsigned int write_head;
 	unsigned int read_head;
-	double rate;
+	double sampling_rate;
 } Chorus;
 
 /**
@@ -87,13 +85,13 @@ typedef struct {
 */
 static LV2_Handle
 instantiate(const LV2_Descriptor*     descriptor,
-            double                    rate,
+            double                    sampling_rate,
             const char*               bundle_path,
             const LV2_Feature* const* features)
 {
 	Chorus* chorus = (Chorus*)calloc(1, sizeof(Chorus));
-	chorus->rate = rate;
-	chorus->delay_buffer_size = rate * MAX_DELAY_IN_SEC + 1;
+	chorus->sampling_rate = sampling_rate;
+	chorus->delay_buffer_size = 1 + (sampling_rate * MAX_DELAY_IN_MS)/1000.0f;
 	chorus->delay_buffer = (float*)calloc(chorus->delay_buffer_size,
 	                                    sizeof(float));
 
@@ -116,11 +114,13 @@ connect_port(LV2_Handle instance,
 	Chorus* chorus = (Chorus*)instance;
 
 	switch ((PortIndex)port) {
-	case CHORUS_DELAY:
-		chorus->delay = (const float*)data;
+	case CHORUS_RATE:
+		chorus->rate = (const float*)data;
 		break;
-	case CHORUS_FEEDBACK:
-		chorus->feedback = (const float*)data;
+	case CHORUS_DEPTH:
+		chorus->depth = (const float*)data;
+	case CHORUS_MIX:
+		chorus->mix = (const float*)data;
 	case CHORUS_INPUT:
 		chorus->input = (const float*)data;
 		break;
@@ -158,26 +158,32 @@ run(LV2_Handle instance, uint32_t n_samples)
 {
 	Chorus* chorus = (Chorus*)instance;
 
-	const float        delay   = *(chorus->delay);
-	const float        feedback = *(chorus->feedback);
+	// Port
+	const float rate = *(chorus->rate);
+	const float depth = *(chorus->depth);
+	const float mix = *(chorus->mix);
 	const float* const input  = chorus->input;
 	float* const       output = chorus->output;
+	// Internal data
 	float * const delay_buffer = chorus->delay_buffer;
 	unsigned int delay_buffer_size = chorus->delay_buffer_size;
-	double rate = chorus->rate;
+	double sampling_rate = chorus->sampling_rate;
 
 	const unsigned int delay_in_sample =
-		(unsigned int)((delay * rate > 1)?(delay * rate):1);
+		(unsigned int)(depth * sampling_rate * (float)MAX_DELAY_IN_MS)/1000.0f;
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
+		delay_buffer[chorus->write_head] = input_sample;
+
 		int read_head = chorus->write_head - delay_in_sample;
 		if (read_head < 0) {
 			read_head += delay_buffer_size;
 		}
 		float delay_sample = delay_buffer[read_head];
-		float output_sample = input_sample + (feedback * delay_sample);
-		delay_buffer[chorus->write_head] = output_sample;
+		float output_sample = 0.5f * 
+			((1.0f - mix)* input_sample + mix * delay_sample);
+		
 		chorus->write_head++;
 		if (chorus->write_head >= delay_buffer_size) {
 			chorus->write_head -= delay_buffer_size;
