@@ -69,7 +69,7 @@ typedef struct {
 	float* delay_buffer;
 	unsigned int delay_buffer_size;
 	unsigned int write_head;
-	unsigned int read_head;
+	float progression;
 	double sampling_rate;
 } Chorus;
 
@@ -147,6 +147,11 @@ activate(LV2_Handle instance)
 /** Define a macro for converting a gain in dB to a coefficient. */
 #define DB_CO(g) ((g) > -90.0f ? powf(10.0f, (g) * 0.05f) : 0.0f)
 
+/** PI constant */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif//M_PI
+
 /**
    The `run()` method is the main process function of the plugin.  It processes
    a block of audio in the audio context.  Since this plugin is
@@ -168,13 +173,23 @@ run(LV2_Handle instance, uint32_t n_samples)
 	float * const delay_buffer = chorus->delay_buffer;
 	unsigned int delay_buffer_size = chorus->delay_buffer_size;
 	double sampling_rate = chorus->sampling_rate;
+	float progression = chorus->progression;
 
-	const unsigned int delay_in_sample =
-		(unsigned int)(depth * sampling_rate * (float)MAX_DELAY_IN_MS)/1000.0f;
+	float delta = rate / (float)sampling_rate;
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
 		delay_buffer[chorus->write_head] = input_sample;
+
+		float modulant =  0.5f * ( 1.0f +
+			(sinf(2.0f * (float)M_PI * progression)));
+		progression += delta;
+		if (progression > 1.0f) {
+			progression += -1.0f;
+		}
+
+		const unsigned int delay_in_sample =
+			depth * modulant * sampling_rate * (float)MAX_DELAY_IN_MS * 0.001f;
 
 		int read_head = chorus->write_head - delay_in_sample;
 		if (read_head < 0) {
@@ -189,6 +204,9 @@ run(LV2_Handle instance, uint32_t n_samples)
 			chorus->write_head -= delay_buffer_size;
 		}
 		output[pos] = output_sample;
+		chorus->progression = progression;
+
+
 	}
 }
 
