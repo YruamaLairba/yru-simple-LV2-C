@@ -55,7 +55,8 @@ typedef enum {
    every instance method.  In this simple plugin, only port buffers need to be
    stored, since there is no additional instance data.
 */
-#define MAX_DELAY_IN_MS 30
+#define MAX_CHORUS_AMPLITUDE_MS 30
+#define ADDITIONAL_DELAY_MS 10
 
 
 typedef struct {
@@ -91,7 +92,8 @@ instantiate(const LV2_Descriptor*     descriptor,
 {
 	Chorus* chorus = (Chorus*)calloc(1, sizeof(Chorus));
 	chorus->sampling_rate = sampling_rate;
-	chorus->delay_buffer_size = 1 + (sampling_rate * MAX_DELAY_IN_MS)/1000.0f;
+	chorus->delay_buffer_size = 1 + (sampling_rate * MAX_CHORUS_AMPLITUDE_MS
+		* ADDITIONAL_DELAY_MS)/1000.0f;
 	chorus->delay_buffer = (float*)calloc(chorus->delay_buffer_size,
 	                                    sizeof(float));
 
@@ -188,8 +190,9 @@ run(LV2_Handle instance, uint32_t n_samples)
 			progression += -1.0f;
 		}
 
-		float delay_in_sample = depth * modulant * (float)sampling_rate *
-			(float)MAX_DELAY_IN_MS * 0.001f;
+		float delay_in_sample = ((depth * modulant  * 
+			(float)MAX_CHORUS_AMPLITUDE_MS) + (float)ADDITIONAL_DELAY_MS) *
+			(float)sampling_rate / 1000.0f;
 
 		float delay_in_sample_i; //integral part
 		float delay_in_sample_d; //decimal part
