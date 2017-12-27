@@ -188,17 +188,27 @@ run(LV2_Handle instance, uint32_t n_samples)
 			progression += -1.0f;
 		}
 
-		const unsigned int delay_in_sample =
-			depth * modulant * sampling_rate * (float)MAX_DELAY_IN_MS * 0.001f;
+		float delay_in_sample = depth * modulant * (float)sampling_rate *
+			(float)MAX_DELAY_IN_MS * 0.001f;
 
-		int read_head = chorus->write_head - delay_in_sample;
-		if (read_head < 0) {
-			read_head += delay_buffer_size;
-		}
-		float delay_sample = delay_buffer[read_head];
+		float delay_in_sample_i; //integral part
+		float delay_in_sample_d; //decimal part
+		delay_in_sample_d = modff(delay_in_sample, &delay_in_sample_i);
+
+		int read_head_a = chorus->write_head - (int)delay_in_sample_i;
+		//int read_head_b = read_head_a - 1;
+		if (read_head_a < 0) read_head_a += delay_buffer_size;
+		int read_head_b = read_head_a - 1;
+		if (read_head_b < 0) read_head_b += delay_buffer_size;
+
+		float sample_a = delay_buffer[read_head_a];
+		float sample_b = delay_buffer[read_head_b];
+		float interpolated_sample = (1.0f - delay_in_sample_d) * sample_a + 
+			delay_in_sample_d * sample_b;
+
 		float output_sample = 0.5f * 
-			((1.0f - mix)* input_sample + mix * delay_sample);
-		
+			((1.0f - mix)* input_sample + mix * interpolated_sample);
+
 		chorus->write_head++;
 		if (chorus->write_head >= delay_buffer_size) {
 			chorus->write_head -= delay_buffer_size;
