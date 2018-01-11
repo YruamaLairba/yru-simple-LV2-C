@@ -22,12 +22,25 @@ It's just an echo effect with time and feedback parameter. Time controls delay
 between repetition and feedback controls how repetitions decrease (higher
 feedback mean lower decrease).
 
+block diagram :
+
+![simple-echo block diagram](pictures/echo-diagram.png)
+
 ### simple-tremolo
 
 It's a tremolo with a sinusoidal envelop. It have two parameter, rate and
 depth.
 
+block diagram :
+
+![simple-tremolo block diagram](pictures/tremolo-diagram.png)
+
+
 ### simple-chorus
 
 A chorus effect with three parameters ; rate, depth and mix. A sinusoid is used
 for the modulation.
+
+block diagram :
+
+![simple-chorus block diagram](pictures/chorus-diagram.png)
