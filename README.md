@@ -27,3 +27,7 @@ feedback mean lower decrease).
 It's a tremolo with a sinusoidal envelop. It have two parameter, rate and
 depth.
 
+### simple-chorus
+
+A chorus effect with three parameters ; rate, depth and mix. A sinusoid is used
+for the modulation.
