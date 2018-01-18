@@ -20,7 +20,7 @@ def configure(conf):
     conf.load('lv2')
     autowaf.configure(conf)
     autowaf.set_c99_mode(conf)
-    autowaf.display_header('Chorus Configuration')
+    autowaf.display_header('Flanger Configuration')
 
     if not autowaf.is_child():
         autowaf.check_pkg(conf, 'lv2', uselib_store='LV2')

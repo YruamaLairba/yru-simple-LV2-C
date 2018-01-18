@@ -10,9 +10,9 @@
 		lv2:DelayPlugin ;
 # Project
 	lv2:project <http://lv2plug.in/ns/lv2> ;
-	doap:name "Simple chorus" ,
-		"Simple Chorus"@en-gb ,
-		"Chorus Simple"@fr ;
+	doap:name "Simple flanger" ,
+		"Simple Flanger"@en-gb ,
+		"Flanger Simple"@fr ;
 	doap:license <http://opensource.org/licenses/isc> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:port [

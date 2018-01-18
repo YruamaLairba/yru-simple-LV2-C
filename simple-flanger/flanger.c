@@ -35,18 +35,18 @@
    file is a good convention to follow.  If this URI does not match that used
    in the data files, the host will fail to load the plugin.
 */
-#define CHORUS_URI "https://github.com/YruamaLairba/yru-simple-LV2-C#simple-flanger"
+#define FLANGER_URI "https://github.com/YruamaLairba/yru-simple-LV2-C#simple-flanger"
 
 /**
    In code, ports are referred to by index.  An enumeration of port indices
    should be defined for readability.
 */
 typedef enum {
-	CHORUS_RATE = 0,
-	CHORUS_DEPTH = 1,
-	CHORUS_MIX = 2,
-	CHORUS_INPUT  = 3,
-	CHORUS_OUTPUT = 4
+	FLANGER_RATE = 0,
+	FLANGER_DEPTH = 1,
+	FLANGER_MIX = 2,
+	FLANGER_INPUT  = 3,
+	FLANGER_OUTPUT = 4
 } PortIndex;
 
 /**
@@ -55,7 +55,7 @@ typedef enum {
    every instance method.  In this simple plugin, only port buffers need to be
    stored, since there is no additional instance data.
 */
-#define MAX_CHORUS_AMPLITUDE_MS 30
+#define MAX_FLANGER_AMPLITUDE_MS 30
 #define ADDITIONAL_DELAY_MS 10
 
 
@@ -72,7 +72,7 @@ typedef struct {
 	unsigned int write_head;
 	float progression;
 	double sampling_rate;
-} Chorus;
+} Flanger;
 
 /**
    The `instantiate()` function is called by the host to create a new plugin
@@ -90,14 +90,14 @@ instantiate(const LV2_Descriptor*     descriptor,
             const char*               bundle_path,
             const LV2_Feature* const* features)
 {
-	Chorus* chorus = (Chorus*)calloc(1, sizeof(Chorus));
-	chorus->sampling_rate = sampling_rate;
-	chorus->delay_buffer_size = 1 + (sampling_rate * MAX_CHORUS_AMPLITUDE_MS
+	Flanger* flanger = (Flanger*)calloc(1, sizeof(Flanger));
+	flanger->sampling_rate = sampling_rate;
+	flanger->delay_buffer_size = 1 + (sampling_rate * MAX_FLANGER_AMPLITUDE_MS
 		* ADDITIONAL_DELAY_MS)/1000.0f;
-	chorus->delay_buffer = (float*)calloc(chorus->delay_buffer_size,
+	flanger->delay_buffer = (float*)calloc(flanger->delay_buffer_size,
 	                                    sizeof(float));
 
-	return (LV2_Handle)chorus;
+	return (LV2_Handle)flanger;
 }
 
 /**
@@ -113,21 +113,21 @@ connect_port(LV2_Handle instance,
              uint32_t   port,
              void*      data)
 {
-	Chorus* chorus = (Chorus*)instance;
+	Flanger* flanger = (Flanger*)instance;
 
 	switch ((PortIndex)port) {
-	case CHORUS_RATE:
-		chorus->rate = (const float*)data;
+	case FLANGER_RATE:
+		flanger->rate = (const float*)data;
 		break;
-	case CHORUS_DEPTH:
-		chorus->depth = (const float*)data;
-	case CHORUS_MIX:
-		chorus->mix = (const float*)data;
-	case CHORUS_INPUT:
-		chorus->input = (const float*)data;
+	case FLANGER_DEPTH:
+		flanger->depth = (const float*)data;
+	case FLANGER_MIX:
+		flanger->mix = (const float*)data;
+	case FLANGER_INPUT:
+		flanger->input = (const float*)data;
 		break;
-	case CHORUS_OUTPUT:
-		chorus->output = (float*)data;
+	case FLANGER_OUTPUT:
+		flanger->output = (float*)data;
 		break;
 	}
 }
@@ -163,25 +163,25 @@ activate(LV2_Handle instance)
 static void
 run(LV2_Handle instance, uint32_t n_samples)
 {
-	Chorus* chorus = (Chorus*)instance;
+	Flanger* flanger = (Flanger*)instance;
 
 	// Port
-	const float rate = *(chorus->rate);
-	const float depth = *(chorus->depth);
-	const float mix = *(chorus->mix);
-	const float* const input  = chorus->input;
-	float* const       output = chorus->output;
+	const float rate = *(flanger->rate);
+	const float depth = *(flanger->depth);
+	const float mix = *(flanger->mix);
+	const float* const input  = flanger->input;
+	float* const       output = flanger->output;
 	// Internal data
-	float * const delay_buffer = chorus->delay_buffer;
-	unsigned int delay_buffer_size = chorus->delay_buffer_size;
-	double sampling_rate = chorus->sampling_rate;
-	float progression = chorus->progression;
+	float * const delay_buffer = flanger->delay_buffer;
+	unsigned int delay_buffer_size = flanger->delay_buffer_size;
+	double sampling_rate = flanger->sampling_rate;
+	float progression = flanger->progression;
 
 	float delta = rate / (float)sampling_rate;
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
-		delay_buffer[chorus->write_head] = input_sample;
+		delay_buffer[flanger->write_head] = input_sample;
 
 		float modulant =  0.5f * ( 1.0f +
 			(sinf(2.0f * (float)M_PI * progression)));
@@ -191,14 +191,14 @@ run(LV2_Handle instance, uint32_t n_samples)
 		}
 
 		float delay_in_sample = ((depth * modulant  * 
-			(float)MAX_CHORUS_AMPLITUDE_MS) + (float)ADDITIONAL_DELAY_MS) *
+			(float)MAX_FLANGER_AMPLITUDE_MS) + (float)ADDITIONAL_DELAY_MS) *
 			(float)sampling_rate / 1000.0f;
 
 		float delay_in_sample_i; //integral part
 		float delay_in_sample_d; //decimal part
 		delay_in_sample_d = modff(delay_in_sample, &delay_in_sample_i);
 
-		int read_head_a = chorus->write_head - (int)delay_in_sample_i;
+		int read_head_a = flanger->write_head - (int)delay_in_sample_i;
 		//int read_head_b = read_head_a - 1;
 		if (read_head_a < 0) read_head_a += delay_buffer_size;
 		int read_head_b = read_head_a - 1;
@@ -212,12 +212,12 @@ run(LV2_Handle instance, uint32_t n_samples)
 		float output_sample = 0.5f * 
 			((1.0f - mix)* input_sample + mix * interpolated_sample);
 
-		chorus->write_head++;
-		if (chorus->write_head >= delay_buffer_size) {
-			chorus->write_head -= delay_buffer_size;
+		flanger->write_head++;
+		if (flanger->write_head >= delay_buffer_size) {
+			flanger->write_head -= delay_buffer_size;
 		}
 		output[pos] = output_sample;
-		chorus->progression = progression;
+		flanger->progression = progression;
 
 
 	}
@@ -248,9 +248,9 @@ deactivate(LV2_Handle instance)
 static void
 cleanup(LV2_Handle instance)
 {
-	Chorus* chorus = (Chorus*)instance;
-	chorus->delay_buffer_size = 0;
-	free(chorus->delay_buffer);
+	Flanger* flanger = (Flanger*)instance;
+	flanger->delay_buffer_size = 0;
+	free(flanger->delay_buffer);
 	free(instance);
 }
 
@@ -276,7 +276,7 @@ extension_data(const char* uri)
    library constructors and destructors to clean up properly.
 */
 static const LV2_Descriptor descriptor = {
-	CHORUS_URI,
+	FLANGER_URI,
 	instantiate,
 	connect_port,
 	activate,
