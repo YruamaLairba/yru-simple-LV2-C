@@ -44,9 +44,10 @@
 typedef enum {
 	FLANGER_RATE = 0,
 	FLANGER_DEPTH = 1,
-	FLANGER_MIX = 2,
-	FLANGER_INPUT  = 3,
-	FLANGER_OUTPUT = 4
+	FLANGER_FEEDBACK = 2,
+	FLANGER_MIX = 3,
+	FLANGER_INPUT  = 4,
+	FLANGER_OUTPUT = 5
 } PortIndex;
 
 /**
@@ -63,6 +64,7 @@ typedef struct {
 	// Port buffers
 	const float* rate;
 	const float* depth;
+	const float* feedback;
 	const float* mix;
 	const float* input;
 	float*       output;
@@ -121,6 +123,8 @@ connect_port(LV2_Handle instance,
 		break;
 	case FLANGER_DEPTH:
 		flanger->depth = (const float*)data;
+	case FLANGER_FEEDBACK:
+		flanger->feedback = (const float*)data;
 	case FLANGER_MIX:
 		flanger->mix = (const float*)data;
 	case FLANGER_INPUT:
@@ -168,6 +172,7 @@ run(LV2_Handle instance, uint32_t n_samples)
 	// Port
 	const float rate = *(flanger->rate);
 	const float depth = *(flanger->depth);
+	const float feedback = *(flanger->feedback);
 	const float mix = *(flanger->mix);
 	const float* const input  = flanger->input;
 	float* const       output = flanger->output;
