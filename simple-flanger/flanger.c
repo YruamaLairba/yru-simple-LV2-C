@@ -56,8 +56,8 @@ typedef enum {
    every instance method.  In this simple plugin, only port buffers need to be
    stored, since there is no additional instance data.
 */
-#define MAX_FLANGER_AMPLITUDE_MS 30
-#define ADDITIONAL_DELAY_MS 10
+#define MAX_FLANGER_AMPLITUDE_MS 15
+#define ADDITIONAL_DELAY_MS 1
 
 
 typedef struct {
@@ -186,7 +186,6 @@ run(LV2_Handle instance, uint32_t n_samples)
 
 	for (uint32_t pos = 0; pos < n_samples; pos++) {
 		float input_sample = input[pos];
-		delay_buffer[flanger->write_head] = input_sample;
 
 		float modulant =  0.5f * ( 1.0f +
 			(sinf(2.0f * (float)M_PI * progression)));
@@ -198,6 +197,9 @@ run(LV2_Handle instance, uint32_t n_samples)
 		float delay_in_sample = ((depth * modulant  * 
 			(float)MAX_FLANGER_AMPLITUDE_MS) + (float)ADDITIONAL_DELAY_MS) *
 			(float)sampling_rate / 1000.0f;
+		if (delay_in_sample < 1) {
+			delay_in_sample = 1;
+		}
 
 		float delay_in_sample_i; //integral part
 		float delay_in_sample_d; //decimal part
@@ -209,13 +211,17 @@ run(LV2_Handle instance, uint32_t n_samples)
 		int read_head_b = read_head_a - 1;
 		if (read_head_b < 0) read_head_b += delay_buffer_size;
 
+		//using interpolation to do subsampling delay
 		float sample_a = delay_buffer[read_head_a];
 		float sample_b = delay_buffer[read_head_b];
-		float interpolated_sample = (1.0f - delay_in_sample_d) * sample_a + 
+		float delayed_sample = (1.0f - delay_in_sample_d) * sample_a + 
 			delay_in_sample_d * sample_b;
 
+		delay_buffer[flanger->write_head] = input_sample -
+			delayed_sample * feedback;
+
 		float output_sample = 0.5f * 
-			((1.0f - mix)* input_sample + mix * interpolated_sample);
+			((1.0f - mix)* input_sample + mix * delayed_sample);
 
 		flanger->write_head++;
 		if (flanger->write_head >= delay_buffer_size) {
