@@ -94,8 +94,8 @@ instantiate(const LV2_Descriptor*     descriptor,
 {
 	Flanger* flanger = (Flanger*)calloc(1, sizeof(Flanger));
 	flanger->sampling_rate = sampling_rate;
-	flanger->delay_buffer_size = 1 + (sampling_rate * MAX_FLANGER_AMPLITUDE_MS
-		* ADDITIONAL_DELAY_MS)/1000.0f;
+	flanger->delay_buffer_size = 1 + ((MAX_FLANGER_AMPLITUDE_MS
+		+ ADDITIONAL_DELAY_MS) * sampling_rate/1000.0f);
 	flanger->delay_buffer = (float*)calloc(flanger->delay_buffer_size,
 	                                    sizeof(float));
 
@@ -194,7 +194,7 @@ run(LV2_Handle instance, uint32_t n_samples)
 			progression += -1.0f;
 		}
 
-		float delay_in_sample = ((depth * modulant  * 
+		float delay_in_sample = ((depth * modulant *
 			(float)MAX_FLANGER_AMPLITUDE_MS) + (float)ADDITIONAL_DELAY_MS) *
 			(float)sampling_rate / 1000.0f;
 		if (delay_in_sample < 1) {
