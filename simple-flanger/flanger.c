@@ -217,7 +217,7 @@ run(LV2_Handle instance, uint32_t n_samples)
 		float delayed_sample = (1.0f - delay_in_sample_d) * sample_a + 
 			delay_in_sample_d * sample_b;
 
-		delay_buffer[flanger->write_head] = input_sample -
+		delay_buffer[flanger->write_head] = input_sample +
 			delayed_sample * feedback;
 
 		float output_sample = 0.5f * 
