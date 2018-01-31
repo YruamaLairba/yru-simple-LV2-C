@@ -92,8 +92,8 @@ instantiate(const LV2_Descriptor*     descriptor,
 {
 	Chorus* chorus = (Chorus*)calloc(1, sizeof(Chorus));
 	chorus->sampling_rate = sampling_rate;
-	chorus->delay_buffer_size = 1 + (sampling_rate * MAX_CHORUS_AMPLITUDE_MS
-		* ADDITIONAL_DELAY_MS)/1000.0f;
+	chorus->delay_buffer_size = 1 + (MAX_CHORUS_AMPLITUDE_MS
+		+ ADDITIONAL_DELAY_MS) * sampling_rate/1000.0f;
 	chorus->delay_buffer = (float*)calloc(chorus->delay_buffer_size,
 	                                    sizeof(float));
 
