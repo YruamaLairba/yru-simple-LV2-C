@@ -44,3 +44,12 @@ for the modulation.
 block diagram :
 
 ![simple-chorus block diagram](pictures/chorus-diagram.png)
+
+### simple-flanger
+
+A flanger effect with four parameters : rate, depth, feedback and mix. The LFO
+generate a sinusoïd.
+
+block diagram :
+
+![simple-flanger block diagram](pictures/flanger-diagram.png)
