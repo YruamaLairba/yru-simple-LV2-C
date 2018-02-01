@@ -56,7 +56,7 @@ typedef enum {
    every instance method.  In this simple plugin, only port buffers need to be
    stored, since there is no additional instance data.
 */
-#define MAX_FLANGER_AMPLITUDE_MS 15
+#define MAX_FLANGER_AMPLITUDE_MS 10
 #define ADDITIONAL_DELAY_MS 1
 
 
